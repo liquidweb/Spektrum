@@ -25,7 +25,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Spektrum'
-copyright = u'2013-2017, John Vrbanac'
+copyright = u'2021, LiquidWeb'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
