@@ -169,7 +169,9 @@ async def execute_spec(spec, spec_semaphore, test_semaphore, reporting,
     async with spec_semaphore:
         successful = await setup_spec(spec, test_semaphore, reporting, dry_run=dry_run)
         if successful is False:
-            reporting.case_finished(spec, None)
+            setup_case = spec._get_case('before_all')
+            spec._add_test_case(setup_case)
+            reporting.case_finished(spec, setup_case)
             return
 
         test_futures = [
@@ -196,7 +198,9 @@ async def execute_spec(spec, spec_semaphore, test_semaphore, reporting,
     async with spec_semaphore:
         successful = await teardown_spec(spec, test_semaphore, dry_run=dry_run)
         if successful is False:
-            reporting.case_finished(spec, None)
+            teardown_case = spec._get_case('after_all')
+            spec._add_test_case(teardown_case)
+            reporting.case_finished(spec, teardown_case)
 
     reporting.spec_finished(spec)
 
@@ -249,6 +253,7 @@ async def execute_method(method, semaphore, dry_run, *args, **kwargs):
 
 
 async def execute_test_case(spec, case, semaphore, reporting, dry_run, *args, **kwargs):
+    spec.has_run = True
     data = get_case_data(case)
     if data.incomplete:
         reporting.case_finished(spec, case)
@@ -261,7 +266,7 @@ async def execute_test_case(spec, case, semaphore, reporting, dry_run, *args, **
     if not (data.skip or data.incomplete):
         successful = await execute_method(spec.before_each, semaphore, dry_run)
         if successful is False:
-            data.before_each_traces.extend(spec.before_each.__tracebacks__)
+            data.before_traces.extend(spec.before_each.__tracebacks__)
             reporting.case_finished(spec, case)
             return
 
@@ -272,6 +277,6 @@ async def execute_test_case(spec, case, semaphore, reporting, dry_run, *args, **
     if not (data.skip or data.incomplete):
         successful = await execute_method(spec.after_each, semaphore, dry_run)
         if successful is False:
-            data.after_each_traces.extend(spec.after_each.__tracebacks__)
+            data.after_traces.extend(spec.after_each.__tracebacks__)
 
     reporting.case_finished(spec, case)

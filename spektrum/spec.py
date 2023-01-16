@@ -37,6 +37,16 @@ class Spec(object):
 
         return parents[-1]
 
+    def _get_case(self, case_name):
+        return next(
+            case
+            for name, case in type(self).__members__().items()
+            if name == case_name
+        )
+
+    def _add_test_case(self, case):
+        self.__test_cases__.append(case)
+
     def __build_data_spec__(self):
         cases = []
         for test_func in self.__test_cases__:
@@ -155,8 +165,8 @@ class TestCaseData(object):
         self.data_kwargs = {}
         self.start_time = 0
         self.end_time = 0
-        self.before_each_traces = []
-        self.after_each_traces = []
+        self.before_traces = []
+        self.after_traces = []
 
 
 def incomplete(f):
