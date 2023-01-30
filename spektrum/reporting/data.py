@@ -57,12 +57,12 @@ class CaseFormatData(object):
         return get_case_data(self._case).skip_reason
 
     @property
-    def before_each_traces(self):
-        return get_case_data(self._case).before_each_traces
+    def before_traces(self):
+        return get_case_data(self._case).before_traces
 
     @property
-    def after_each_traces(self):
-        return get_case_data(self._case).after_each_traces
+    def after_traces(self):
+        return get_case_data(self._case).after_traces
 
     @property
     def successful(self):
@@ -75,11 +75,11 @@ class CaseFormatData(object):
     def error_type(self):
         if getattr(self._spec.before_all, '__tracebacks__', []):
             return 'before_all'
-        elif self.before_each_traces:
+        elif self.before_traces:
             return 'before_each'
         elif getattr(self._spec.after_all, '__tracebacks__', []):
             return 'after_all'
-        elif self.after_each_traces:
+        elif self.after_traces:
             return 'after_each'
         else:
             return 'case'
@@ -119,9 +119,9 @@ class CaseFormatData(object):
         tracebacks = []
         tracebacks.extend(getattr(self._case, '__tracebacks__', []))
         tracebacks.extend(getattr(self._spec.before_all, '__tracebacks__', []))
-        tracebacks.extend(self.before_each_traces)
+        tracebacks.extend(self.before_traces)
         tracebacks.extend(getattr(self._spec.after_all, '__tracebacks__', []))
-        tracebacks.extend(self.after_each_traces)
+        tracebacks.extend(self.after_traces)
         return tracebacks
 
     @property
