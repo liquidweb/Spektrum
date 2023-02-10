@@ -154,10 +154,10 @@ class TestRailRenderer(object):
         case_data.section_id = cached_data.section_id
 
         status = TestRailStatus.FAILED
-        if case_data.successful:
-            status = TestRailStatus.PASSED
-        elif case_data.skipped:
+        if case_data.skipped:
             status = TestRailStatus.SKIPPED
+        elif case_data.successful:
+            status = TestRailStatus.PASSED
 
         timespan = int(case_data.elapsed_time) or 1
 
