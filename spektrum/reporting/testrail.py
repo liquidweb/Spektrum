@@ -3,6 +3,7 @@ from datetime import datetime
 
 from spektrum import logger, utils
 from spektrum.reporting.data import CaseFormatData, SpecFormatData
+from spektrum.reporting.transport import RetryTransport
 
 import httpx
 
@@ -228,9 +229,15 @@ class TestRailClient(object):
         self.endpoint = f'{endpoint}/index.php?'
         self.username = username
         self.api_key = api_key
+        self._transport = RetryTransport(
+            wrapped_transport=httpx.HTTPTransport(),
+            max_attempts=5,
+            backoff_factor=15
+        )
+        self._client = httpx.Client(transport=self._transport)
 
     def _get_paginated(self, item_collection, url=None, auth=None, params=None, timeout=None):
-        resp = httpx.get(url, auth=auth, params=params, timeout=timeout)
+        resp = self._client.get(url, auth=auth, params=params, timeout=timeout)
         data = resp.json()
         offset = data.get('offset', 0)
         limit = data.get('limit', 150)
@@ -254,7 +261,7 @@ class TestRailClient(object):
             'comment': comment,
         })
 
-        return httpx.post(
+        return self._client.post(
             f'{self.endpoint}/api/v2/add_result_for_case/{run_id}/{case_id}',
             json=body,
             auth=(self.username, self.api_key),
@@ -267,7 +274,7 @@ class TestRailClient(object):
             'name': name,
         })
 
-        return httpx.post(
+        return self._client.post(
             f'{self.endpoint}/api/v2/add_run/{project_id}',
             json=body,
             auth=(self.username, self.api_key),
@@ -282,7 +289,7 @@ class TestRailClient(object):
             'parent_id': parent_id,
         })
 
-        return httpx.post(
+        return self._client.post(
             f'{self.endpoint}/api/v2/add_section/{project_id}',
             json=body,
             auth=(self.username, self.api_key),
@@ -296,7 +303,7 @@ class TestRailClient(object):
             'custom_description': description,
         })
 
-        return httpx.post(
+        return self._client.post(
             f'{self.endpoint}/api/v2/add_case/{section_id}',
             json=body,
             auth=(self.username, self.api_key),
@@ -306,7 +313,7 @@ class TestRailClient(object):
     def update_case(self, case_id, **kwargs):
         body = utils.clean_dictionary(kwargs)
 
-        return httpx.post(
+        return self._client.post(
             f'{self.endpoint}/api/v2/update_case/{case_id}',
             json=body,
             auth=(self.username, self.api_key),
@@ -314,7 +321,7 @@ class TestRailClient(object):
         )
 
     def get_sections(self, project_id, suite_id):
-        return httpx.get(
+        return self._client.get(
             f'{self.endpoint}/api/v2/get_sections/{project_id}/&suite_id={suite_id}',
             auth=(self.username, self.api_key),
             timeout=30,
