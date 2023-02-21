@@ -34,6 +34,7 @@ setup(
         'pike>=0.1.0',
         'coverage',
         'httpx>=0.23.0',
+        'python-dateutil>=2.8.2',
         'pyyaml',
     ],
     entry_points = {
