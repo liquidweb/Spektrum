@@ -1,6 +1,6 @@
 import asyncio
-import itertools
 import time
+import re
 
 from pike.manager import PikeManager
 
@@ -92,6 +92,22 @@ class SpektrumRunner(object):
 
         return self.reporting.success
 
+    def _map_classes(self, classes, parent):
+        class_dict = {}
+        for cls in classes:
+            cur_node = f'{parent}.{(cls.__name__)}'
+            class_dict[cur_node] = cls
+            children = find_children(cls)
+            if children:
+                class_dict.update(self._map_classes(children, cur_node))
+        return class_dict
+
+    def _parent_exists(self, name, class_map):
+        for cls_name in class_map.keys():
+            if cls_name in name:
+                return True
+        return False
+
     def filter_by_module_name(self, classes, name):
         found = [
             cls
@@ -99,14 +115,25 @@ class SpektrumRunner(object):
             if name in '{}.{}'.format(cls.__module__, cls.__name__)
         ]
 
-        # Only search children if the class cannot be found at the package lvl
         if not found:
-            children = [find_children(cls) for cls in classes]
-            found = [
+            found = []
+            module = next(
                 cls
-                for cls in itertools.chain.from_iterable(children)
-                if name in '{}.{}'.format(cls.__module__, cls.__name__)
-            ]
+                for cls in classes
+                if cls.__module__ in name
+            )
+            class_dict = self._map_classes([module], module.__module__)
+
+            if name.startswith(utils.REGEX_TOKEN):
+                name = name[len(utils.REGEX_TOKEN):]
+                found_classes = {}
+                for cls_name, cls in class_dict.items():
+                    if re.search(f'{name}$', cls_name):
+                        if not self._parent_exists(cls_name, found_classes):
+                            found_classes[cls_name] = cls
+                found = [cls for cls in found_classes.values()]
+            elif name in class_dict.keys():
+                found = [class_dict[name]]
 
         return found
 

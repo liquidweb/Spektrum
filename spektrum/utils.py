@@ -13,6 +13,7 @@ log = logger.get(__name__)
 SOURCE_CACHE = {}
 TRUE_STRINGS = frozenset(['true', 'True'])
 FALSE_STRINGS = frozenset(['false', 'False'])
+REGEX_TOKEN = 're:'
 
 
 def get_fullname(obj):
