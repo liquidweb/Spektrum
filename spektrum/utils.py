@@ -141,12 +141,62 @@ def get_function_kwargs(old_func, new_args):
     return kwargs
 
 
+def find_by_dependencies(test_dependencies, cases):
+    original_cases = cases.copy()
+    original_cases.reverse()
+    new_cases = []
+
+    for case in original_cases:
+        num = original_cases.count(case)
+        if num > 1:
+            [
+                original_cases.remove(case)
+                for _ in range(num - 1)
+            ]
+
+        new_cases.append(case)
+        for test, dependency in test_dependencies.items():
+            if case != test:
+                continue
+
+            if dependency in original_cases:
+                [
+                    original_cases.remove(dependency)
+                    for _ in range(original_cases.count(dependency))
+                ]
+
+            original_cases.append(dependency)
+            new_cases.append(dependency)
+
+    original_cases.reverse()
+    return original_cases
+
+
 def find_by_names(names, cases):
-    return [
-        case
-        for case in cases
-        if case.__name__ in names or snakecase_to_spaces(case.__name__) in names
-    ]
+    matched_cases = []
+
+    for name in names:
+        use_regex = False
+        if name.startswith(REGEX_TOKEN):
+            name = name[len(REGEX_TOKEN):]
+            use_regex = True
+
+        if use_regex:
+            regex = re.compile(f'^{name}$')
+            matched_cases.extend([
+                case
+                for case in cases
+                if re.match(regex, case.__name__)
+                or re.match(regex, snakecase_to_spaces(case.__name__))
+            ])
+        else:
+            matched_cases.extend([
+                case
+                for case in cases
+                if case.__name__ == name or snakecase_to_spaces(case.__name__) == name
+            ])
+
+    return matched_cases
 
 
 def clean_dictionary(data):
@@ -234,6 +284,11 @@ def filter_cases_by_data(spec, metadata, test_names, exclude):
 
     if test_names:
         spec.__test_cases__ = find_by_names(test_names, spec.__test_cases__)
+        if spec._get_runtime_test_dependencies():
+            spec.__test_cases__ = find_by_dependencies(
+                spec._get_runtime_test_dependencies(),
+                spec.__test_cases__
+            )
     if metadata:
         spec.__test_cases__ = find_by_metadata(metadata, spec.__test_cases__)
     if exclude:

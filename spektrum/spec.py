@@ -13,6 +13,7 @@ class Spec(object):
     __FIXTURE__ = False
     __CASE_CONCURRENCY__ = None
     __SPEC_CONCURRENCY__ = None
+    __TEST_DEPENDENCIES__ = {}
 
     def __init__(self, parent=None):
         self._id = str(uuid.uuid4())
@@ -28,6 +29,9 @@ class Spec(object):
 
         if self.DATASET:
             self.__build_data_spec__()
+
+    def _get_runtime_test_dependencies(self):
+        return Spec.__TEST_DEPENDENCIES__
 
     @classmethod
     def get_parent_class_name(cls):
@@ -48,6 +52,7 @@ class Spec(object):
         self.__test_cases__.append(case)
 
     def __build_data_spec__(self):
+        case_mappings = {name: {} for name in self.DATASET.keys()}
         cases = []
         for test_func in self.__test_cases__:
             base_metadata = get_case_data(test_func).metadata
@@ -95,8 +100,25 @@ class Spec(object):
                 setattr(self, func_name, unbound_method)
                 get_case_data(new_func).metadata = meta
                 cases.append(new_func)
+                case_mappings[name].update({test_func: new_func})
 
         self.__test_cases__ = cases
+
+        updated_dependencies = {}
+
+        for case, dependency in Spec.__TEST_DEPENDENCIES__.items():
+            for case_map in case_mappings.values():
+
+                matched_case = case_map.get(case)
+
+                if matched_case:
+                    updated_dependencies.update({
+                        matched_case: case_map.get(dependency)
+                    })
+                else:
+                    updated_dependencies.update({case: dependency})
+
+        Spec.__TEST_DEPENDENCIES__ = updated_dependencies
 
     @classmethod
     def __members__(cls):
@@ -218,6 +240,14 @@ def skip_if(condition, reason=None):
 def metadata(**kv_pairs):
     def decorated(f):
         get_case_data(f).metadata = kv_pairs
+        return f
+    return decorated
+
+
+def depends_on(test):
+    """A decorator to add test that is depended on by the wrapped test"""
+    def decorated(f):
+        Spec.__TEST_DEPENDENCIES__.update({f: test})
         return f
     return decorated
 
