@@ -176,12 +176,8 @@ def find_by_names(names, cases):
     matched_cases = []
 
     for name in names:
-        use_regex = False
         if name.startswith(REGEX_TOKEN):
             name = name[len(REGEX_TOKEN):]
-            use_regex = True
-
-        if use_regex:
             regex = re.compile(f'^{name}$')
             matched_cases.extend([
                 case
