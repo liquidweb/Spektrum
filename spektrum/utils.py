@@ -141,36 +141,25 @@ def get_function_kwargs(old_func, new_args):
     return kwargs
 
 
-def find_by_dependencies(case_dependencies, filtered_cases, unfiltered_test_cases):
-    filtered_cases_copy = filtered_cases.copy()
-    filtered_cases_copy.reverse()
+def find_by_dependencies(case_dependencies, filtered_cases, all_cases):
+    found_cases = []
 
-    for filtered_case in filtered_cases_copy:
-        num_matching_cases = filtered_cases_copy.count(filtered_case)
-        if num_matching_cases > 1:
-            [
-                filtered_cases_copy.remove(filtered_case)
-                for _ in range(num_matching_cases - 1)
-            ]
+    for filtered_case in filtered_cases:
+        if filtered_case not in found_cases:
+            found_cases.append(filtered_case)
 
-        for test, dependency in case_dependencies.items():
-            if filtered_case != test:
-                continue
+        def add_dependencies(found_dependencies, case_dependencies, current_case):
+            for test, dependency in case_dependencies.items():
+                if current_case == test and dependency not in found_dependencies:
+                    found_dependencies.append(dependency)
+                    add_dependencies(found_dependencies, case_dependencies, dependency)
 
-            if dependency in filtered_cases_copy:
-                [
-                    filtered_cases_copy.remove(dependency)
-                    for _ in range(filtered_cases_copy.count(dependency))
-                ]
-
-            filtered_cases_copy.append(dependency)
-
-    filtered_cases_copy.reverse()
+        add_dependencies(found_cases, case_dependencies, filtered_case)
 
     sorted_cases = []
-    for unfiltered_case in unfiltered_test_cases:
-        if unfiltered_case in filtered_cases_copy:
-            sorted_cases.append(unfiltered_case)
+    for case in all_cases:
+        if case in found_cases:
+            sorted_cases.append(case)
     return sorted_cases
 
 
@@ -280,7 +269,7 @@ def filter_cases_by_data(spec, metadata, test_names, exclude):
     # I Don't really like messing with the test list after the fact.
     # This should really get fixed at somepoint
 
-    unfiltered_test_cases = spec.__test_cases__.copy()
+    all_cases = spec.__test_cases__.copy()
 
     if test_names:
         spec.__test_cases__ = find_by_names(test_names, spec.__test_cases__)
@@ -288,7 +277,7 @@ def filter_cases_by_data(spec, metadata, test_names, exclude):
             spec.__test_cases__ = find_by_dependencies(
                 spec._get_runtime_test_dependencies(),
                 spec.__test_cases__,
-                unfiltered_test_cases
+                all_cases
             )
     if metadata:
         spec.__test_cases__ = find_by_metadata(metadata, spec.__test_cases__)
