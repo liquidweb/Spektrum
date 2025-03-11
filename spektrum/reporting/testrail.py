@@ -150,7 +150,7 @@ class TestRailRenderer(object):
     def report_case(self, spec, case):
         cached_data = self.get_cached_case_data(spec, case.__name__)
         if not cached_data:
-            log.warning(f"Couldn't find cached data for: {case.__name__}")
+            log.warning(f'Couldn\'t find cached data for: {case.__name__}')
             return
 
         case_data = TestRailCaseData(spec, case)
