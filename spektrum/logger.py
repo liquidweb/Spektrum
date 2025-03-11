@@ -7,6 +7,7 @@ def setup(cfg=None):
         # format='%(name)s - %(message)s'
         format='%(message)s'
     )
+    logging.getLogger('httpx').setLevel(logging.WARNING)
 
 
 def get(name=None):
