@@ -149,6 +149,9 @@ class TestRailRenderer(object):
 
     def report_case(self, spec, case):
         cached_data = self.get_cached_case_data(spec, case.__name__)
+        if not cached_data:
+            log.warning(f"Couldn't find cached data for: {case.__name__}")
+            return
 
         case_data = TestRailCaseData(spec, case)
         case_data.case_id = cached_data.case_id
@@ -331,7 +334,7 @@ class TestRailClient(object):
         parameters = {
             f'/api/v2/get_cases/{project_id}': None,
             'suite_id': suite_id,
-            'limit': 50,
+            'limit': 100,
         }
         if section_id:
             parameters['section_id'] = section_id
