@@ -181,7 +181,7 @@ class Expectation(object):
         try:
             self.target(*self.caller_args, **self.caller_kwargs)
         except Exception as e:
-            condition = type(e) == exception
+            condition = type(e) is exception
             raised_exc = e
 
         # We didn't raise anything
@@ -189,7 +189,7 @@ class Expectation(object):
             self.success = True
 
         # Raised, but it didn't match
-        elif self.used_negative and type(raised_exc) != exception:
+        elif self.used_negative and type(raised_exc) is not exception:
             self.success = False
 
         elif self.used_negative:
