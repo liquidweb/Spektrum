@@ -27,7 +27,7 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
     python_requires='>=3.5',
-    tests_require=['pytest', 'flake8'],
+    tests_requires=['pytest', 'flake8'],
     install_requires=[
         'colored',
         'docopt',
