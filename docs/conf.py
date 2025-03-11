@@ -31,8 +31,8 @@ copyright = u'2021, LiquidWeb'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 
-version = '1.1.2'
-release = '1.1.2'
+version = '1.1.1'
+release = '1.1.1'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
