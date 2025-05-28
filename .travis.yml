@@ -1,24 +1,18 @@
 sudo: false
 language: python
-
+dist: lunar
 cache:
   directories:
   - "$HOME/.cache/pip"
-
 matrix:
   include:
-  - python: 3.8
+  - python: 3.12
     env: TOXENV=flake8
-
-  - python: 3.8
-    env: TOXENV=py38
-
+  - python: 3.12
+    env: TOXENV=py312
 install:
   - pip install pip tox codecov twine
-
-
-before_deploy: 'pip install urllib3==1.26.6'
-
+before_deploy: 'pip install urllib3==2.4.0'
 deploy:
   provider: pypi
   username: "__token__"
@@ -27,9 +21,7 @@ deploy:
   skip_existing: true
   on:
     tags: true
-
 script:
   - tox -e $TOXENV
-
 after_success:
   - codecov
