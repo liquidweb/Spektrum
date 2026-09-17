@@ -7,7 +7,14 @@ Release Notes
 Next Release
 --------------------------------
 
-*Nothing yet.*
+Features and bug fixes
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+ #. Removing the pull request template - a description now carries the change
+    information and the output from the test run rather than a form with
+    sections to delete, and the single-commit rule is stated as a shared
+    convention across our repositories rather than a preference local to this
+    one - gh-#19
 
 Release: 1.3.1
 --------------------------------
