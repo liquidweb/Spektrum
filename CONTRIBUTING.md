@@ -30,7 +30,9 @@ The short version:
 
 ## Opening a PR
 
-Use the PR template — link the issue it addresses and describe how you verified the change.
+A pull request description carries the change information and the output from your test
+run. Nothing else — no template to fill in, no sections to delete because they do not apply.
+Link the ticket, say what changed, and paste what you ran and what it printed.
 Base branch is `master`.
 
 ## Before you open a PR
@@ -44,4 +46,5 @@ Base branch is `master`.
 - [ ] Docs (`README.rst`, `AGENTS.md`, `docs/`) updated if this changes how the project is
       built, run, or used
 - [ ] Squashed to a single commit, with the evidence above folded into the message body.
-      Work in as many commits as you like locally; a PR is one commit
+      Work in as many commits as you like locally; a PR is one commit. This is a shared
+      convention across our repositories, not a preference local to this one
