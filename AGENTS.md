@@ -6,6 +6,26 @@ driven by the `spektrum` CLI.
 This file is the entry point for any agent working in the repo. `CLAUDE.md` is a symlink
 to it.
 
+## This repository is public
+
+`liquidweb/Spektrum` is public on GitHub, and so is the usual fork. Anything committed here
+is world-readable: file contents, commit messages, and pull request titles and descriptions.
+
+**Do not write internal detail into this repository.** Specifically, keep out:
+
+- names or paths of internal repositories and projects
+- internal hostnames, group names or URLs
+- internal team or organisational structure
+- quoted internal policy, mandates or leadership direction
+- counts or inventories that describe the size or shape of the internal estate
+
+A rule that comes from outside this repository is stated on its own terms -- what it requires
+and why it is sound -- not by who mandated it or which other repositories it also applies to.
+Bare ticket ids are fine; this repository's history already carries them.
+
+This applies to `openspec/` artifacts too. A proposal or design is a committed file, so it is
+as public as the code.
+
 ## MANDATORY — read before changing anything
 
 - **Any change** → [openspec/project.md](openspec/project.md) — the PR procedure, the
