@@ -19,10 +19,18 @@
 #      not. Neither is advisory, and `continue-on-error` is not used: it renders as a muted
 #      warning and gets scrolled past.
 #
-#   2. Neither job is a required status check, and this file must not be paired with branch
-#      protection that makes it one. The check goes red and whoever merges takes
-#      responsibility. Since any author can state an exception in one sentence, a red gate
-#      means they declined to give a reason — which is worth seeing and not worth blocking on.
+#   2. Both jobs are required status checks on `master`, so a red one holds the merge. On
+#      GitHub there is no project-wide "pipelines must pass" switch: a check blocks only by
+#      being named in branch protection, so the two `name:` values below — "OpenSpec artifacts
+#      are valid" and "A spec file, or a stated exception" — are part of the contract, and
+#      renaming one silently un-blocks it. Registering them accompanies this change.
+#
+#      Blocking and the exception line are not in tension; the exception is what makes
+#      blocking proportionate. Without a required check, a pull request can be merged having
+#      done neither thing — no spec file and no stated reason — leaving a red run nobody ever
+#      answers for. With one, it can be merged only after doing one of the two. The relief is
+#      one sentence, it needs nobody's approval, and the sentence itself is the record of why
+#      the rule was set aside.
 #
 # Pull requests arrive from personal forks, so `GITHUB_TOKEN` is read-only and secrets are
 # unavailable. Both jobs need only `npm install` and `git diff`, so that is fine.
@@ -139,5 +147,6 @@ jobs:
           echo "description edits. Do not use the \"Re-run\" button for that: a re-run replays"
           echo "the original event, so it will not see your edit."
           echo
-          echo "This check does not block the merge. If you merge over it, that is yours to own."
+          echo "This check is required, so the merge is held until one of the two conditions"
+          echo "is met. Either one satisfies it, and neither needs anyone's approval."
           exit 1

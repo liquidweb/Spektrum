@@ -71,11 +71,14 @@ introduced green, which is the one moment where it costs nothing to introduce.
   `openspec/project.md` asks for a PR to be squashed to one commit but explicitly endorses
   working in as many commits as you like while the branch is local; a per-commit rule would
   fail the spec-then-implementation shape the project recommends.
-- **The gate goes red without blocking the merge.** It is not registered as a required check
-  and this change alters no branch-protection setting. Whoever merges over a red gate takes
-  responsibility for that decision, and the run is the record of it. This is deliberately the
-  weak half of the pair: since an author can always state an exception, a red gate means they
-  neither wrote a spec nor were willing to say why.
+- **The gate blocks the merge, and the exception line is the sanctioned override.** Both jobs
+  are registered as required status checks on the default branch — on GitHub a check blocks only
+  by being named there, so the registration is named as part of this change rather than left to
+  a later decision. The override is not a hole in a blocking gate; it is what keeps blocking
+  proportionate. Without a required check, a pull request can be merged having done neither
+  thing — no spec file and no stated reason — leaving a red run nobody is accountable for. With
+  one, it can be merged only after one of the two has been done, and the relief is a single
+  sentence that needs nobody's approval and is itself the record of why the rule was set aside.
 - **The dependency is pinned to the correct package.** `@fission-ai/openspec@^1.12.0`. The
   unscoped `openspec` name on npm is a different package by a different author and installing
   it does not produce this CLI.
@@ -119,26 +122,30 @@ worse.
   Travis matrix is Python-only. This is the first non-Python tool in the repository's build,
   and it is confined to the new workflow.
 - `CONTRIBUTING.md` — one paragraph naming which CI system owns tests and lint versus which
-  owns process, stating that the process gate does not block a merge, and showing the
-  `sdd-exception:` line so a contributor who needs it can copy it. **The gate's behaviour is
-  specified here; the prose lands with the workflow.**
+  owns process, stating that the process gate holds the merge until one of the two conditions is
+  met, and showing the `sdd-exception:` line so a contributor who needs it can copy it. **The
+  gate's behaviour is specified here; the prose lands with the workflow.**
 - **No pull request template.** COS-29 removes `.github/pull_request_template.md`:
   a description carries the change information and the test-run output, nothing else. So the
   exception line is taught by `CONTRIBUTING.md` and by the gate's own failure message, which
   has to state both satisfying conditions and how to re-run — there is no form to put it on.
-- `enforce-sdd-and-audit-docs` — tasks 5.1–5.4 are superseded on three points, and its
-  escape-hatch instinct is kept. That change's design paired a `spektrum/`-watched path rule
-  with a `no-spec` label, ran `openspec validate --all` without `--strict`, and described the
-  check as merge-blocking. The watched path, the missing `--strict` and the merge-blocking
-  framing are the three decisions reversed here, for the reasons in design.md — Decisions. The
-  escape hatch is not one of them: wanting a way for an author to say "no spec, and here is
-  why" was the right call and is exactly what the rule provides. What changes is the
-  mechanism, not the intent — a label is one click that records no reason, an
-  `sdd-exception: (.+)` line captures the reason in the description where a reviewer reads it
-  and the job can echo it into the log. Whoever lands that change should strike section 5
-  rather than build it twice.
-- **Not touched:** `spektrum/`, `tests/`, `.travis.yml`, `tox.ini`, and every branch-protection
-  setting on `liquidweb/Spektrum`. No library behaviour changes and no released artifact moves.
+- `enforce-sdd-and-audit-docs` — tasks 5.1–5.4 are superseded on two points, and two of their
+  instincts are kept. That change's design paired a `spektrum/`-watched path rule with a
+  `no-spec` label, ran `openspec validate --all` without `--strict`, and described the check as
+  merge-blocking. The watched path and the missing `--strict` are the two decisions reversed
+  here, for the reasons in design.md — Decisions. The merge-blocking framing is not one of
+  them: it was right, and this change implements it. So is the escape hatch — wanting a way for
+  an author to say "no spec, and here is why" is exactly what the rule provides, and it is also
+  what lets the check block without becoming a stoppage. What changes there is the mechanism,
+  not the intent — a label is one click that records no reason, an `sdd-exception: (.+)` line
+  captures the reason in the description where a reviewer reads it and the job can echo it into
+  the log. Whoever lands that change should strike section 5 rather than build it twice.
+- **Branch protection on the default branch** — the two job names are added to its required
+  status checks, and nothing else in that configuration changes. It is repository configuration
+  rather than a file in the diff, so it cannot be reviewed in the diff; it is recorded here and
+  in design.md, and it lands with this change rather than after it.
+- **Not touched:** `spektrum/`, `tests/`, `.travis.yml` and `tox.ini`. No library behaviour
+  changes and no released artifact moves.
 - Tracked as **COS-31**. Related: **COS-30** carries the shared GitLab CI template for the same
   contract. GitHub Actions and GitLab CI share no configuration, so this is an independent
   proof of the contract on a second platform, not a port of that work; the requirements are the
