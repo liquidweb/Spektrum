@@ -18,8 +18,16 @@ Features and bug fixes
  #. Adding a spec-driven development check to every pull request - a pull
     request must carry a spec file under openspec/, or state a reason on an
     sdd-exception: line in its description. A malformed spec or change fails
-    separately and cannot be waived. Both checks fail the build and neither
-    blocks a merge - gh-#20
+    separately and cannot be waived. Both checks fail the build rather than
+    warning - gh-#20
+ #. Making both spec-driven development checks required, so a red one holds
+    the merge until the pull request either carries a spec file or states a
+    reason on an sdd-exception: line. Doing neither is no longer a mergeable
+    state, and the exception needs no approval - the author writes the line
+    and it is the record of why the rule was set aside. The failure message
+    now says to edit the description rather than to re-run the check, because
+    a re-run is decided against the description the run was triggered with -
+    gh-#21
 
 Release: 1.3.1
 --------------------------------

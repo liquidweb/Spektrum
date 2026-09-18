@@ -77,7 +77,7 @@
 
 ## 4. Prove the contract, scenario by scenario
 
-- [ ] 4.1 Walk the `sdd-ci-gate` spec and build a table of its 29 scenarios against how each is
+- [ ] 4.1 Walk the `sdd-ci-gate` spec and build a table of its 30 scenarios against how each is
       verified: an executed run, a local run of the 3.7 script, or a reasoned argument. Any
       scenario with no entry is either untested or unspecifiable, and both need an answer
       before the PR opens.
@@ -118,37 +118,49 @@
       including reading the description from the event payload. If any step needs a credential,
       that step is wrong — design.md rules that out.
 
-## 5. Keep the gate non-blocking, and say so
+## 5. Make the gate blocking, and say so
 
-- [ ] 5.1 Confirm neither job is a required status check: read the branch-protection settings
-      for `master` on `liquidweb/Spektrum` before and after, and confirm they are byte-identical.
-      Verify a red run is still mergeable using one of the deliberately failing pull requests
-      from 4.2 — without merging it.
-- [ ] 5.2 Add a paragraph to `CONTRIBUTING.md`: Travis owns tests, lint and the tagged deploy;
+- [ ] 5.1 Register both contexts as required status checks for `master` on
+      `liquidweb/Spektrum` — `OpenSpec artifacts are valid` and `A spec file, or a stated
+      exception`, spelled exactly as the jobs report them. Record the branch-protection
+      settings before and after and confirm the only difference is those two entries. A check
+      blocks only by being named here; there is no project-wide switch, so an unregistered job
+      is decoration. Do this after the workflow's first run, since a context that has never
+      reported cannot be selected.
+- [ ] 5.2 Verify the block actually holds, with the deliberately failing pull request from 4.2:
+      the merge button must be unavailable while the gate is red — without merging it — and
+      must become available once an `sdd-exception:` line is added and the re-decided run goes
+      green. Record both states; this is the red-then-green evidence for the policy itself
+      rather than for the script.
+- [ ] 5.3 Add a paragraph to `CONTRIBUTING.md`: Travis owns tests, lint and the tagged deploy;
       this workflow owns process; a spec file or an `sdd-exception: <reason>` line satisfies it;
-      a red process check does not block a merge and whoever merges over it owns that call.
-      Include the exception line verbatim so it can be copied. Verify by reading it as a
-      first-time contributor and checking it answers "which red build matters" and "what do I
-      write if I have no spec" without following a link.
-- [ ] 5.3 Do NOT add the exception line to a pull request template — COS-29 removes the
+      a red process check holds the merge until one of those two is done, and the exception is
+      relief the author can take without asking anyone. Include the exception line verbatim so
+      it can be copied. Verify by reading it as a first-time contributor and checking it answers
+      "which red build matters" and "what do I write if I have no spec" without following a link.
+- [ ] 5.4 Do NOT add the exception line to a pull request template — COS-29 removes the
       template, and a template shipping a pre-written `sdd-exception:` line would
       satisfy the gate on every pull request automatically, which is the same as having no
       gate. Instead verify `CONTRIBUTING.md` and the gate's failure message each teach the
       line on their own, so an author meets it either before or at the point of failing.
-- [ ] 5.4 Leave a comment at the top of the workflow recording two things the next person will
-      otherwise undo: the rule is org-level and is exactly two conditions, so adding a path
-      exemption list puts this repository out of contract; and "spec file" deliberately excludes
-      `proposal.md`. Point at this change rather than restating design.md.
+- [ ] 5.5 Leave a comment at the top of the workflow recording three things the next person
+      will otherwise undo: the rule comes from outside this repository and is exactly two
+      conditions, so adding a path exemption list puts it out of contract; "spec file"
+      deliberately excludes `proposal.md`; and the two job names are registered in branch
+      protection, so renaming a job un-blocks the gate without any file in the diff changing.
+      Point at this change rather than restating design.md.
 
 ## 6. Retire the superseded plan and the prior art
 
 - [ ] 6.1 Strike tasks 5.1–5.4 from `openspec/changes/enforce-sdd-and-audit-docs/tasks.md` and
       note in its design.md that `add-openspec-ci-gate` owns the gate. Be precise about what is
-      superseded: the `^spektrum/` watched path, the missing `--strict`, and describing the
-      check as merge-blocking. Its escape hatch is **not** superseded — wanting a way for an
-      author to declare "no spec, and here is why" was correct and matches the org rule; only
-      the mechanism is refined, from a `no-spec` label that records no reason to an
-      `sdd-exception: (.+)` line that captures one and is echoed into the log. Verify
+      superseded: the `^spektrum/` watched path and the missing `--strict`, and nothing else.
+      Two of its instincts are **not** superseded. Describing the check as merge-blocking was
+      correct, and this change implements it. So was wanting a way for an author to declare "no
+      spec, and here is why" — it matches the organisation guidance the rule comes from, and it
+      is what lets a blocking check avoid becoming a stoppage; only the mechanism is refined,
+      from a `no-spec` label that records no reason to an `sdd-exception: (.+)` line that
+      captures one and is echoed into the log. Verify
       `openspec validate enforce-sdd-and-audit-docs --strict` still passes after the edit.
 - [ ] 6.2 Delete the uncommitted `.github/workflows/spec-driven-development.yml` from whatever
       working tree still holds it, or overwrite it with the version this change lands. Verify
@@ -185,11 +197,12 @@
 - [ ] 8.2 Rebase onto current `master` and re-run task 1.1, in case an artifact landed
       meanwhile that fails strict validation.
 - [ ] 8.3 Squash to a single commit, keeping in the body: the run URLs from 2.3, 2.5 and
-      4.2–4.10, the package-identity evidence from 1.4, and the decision that the gate is not a
-      required check.
+      4.2–4.10, the package-identity evidence from 1.4, and the decision that both jobs are
+      required status checks with the `sdd-exception:` line as the override.
 - [ ] 8.4 Open the PR against `liquidweb/Spektrum`, base `master`, describing it as CI and
-      process only with no library behaviour change, and stating plainly that the new check does
-      not block merges. It needs no `sdd-exception:` line — it adds a spec delta and satisfies
+      process only with no library behaviour change, and stating plainly that the new checks are
+      required and hold a merge until the pull request carries a spec file or states an
+      exception. It needs no `sdd-exception:` line — it adds a spec delta and satisfies
       condition 1 on its own.
 - [ ] 8.5 Archive this change once merged (`openspec archive add-openspec-ci-gate`), which
       promotes `sdd-ci-gate` into `openspec/specs/` — and which, by the baseline half of the

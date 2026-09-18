@@ -1,8 +1,8 @@
 ## Purpose
 Make spec-driven development observable on every pull request: define the two ways a pull
 request can satisfy the spec-first rule, what counts as a spec file, which conditions turn the
-process check red, over which diff the verdict is taken, and why a red gate reports rather
-than blocks.
+process check red, over which diff the verdict is taken, and why a red gate holds the merge
+while a stated exception releases it.
 
 ## ADDED Requirements
 
@@ -141,8 +141,11 @@ and not only in a field that can be edited afterwards.
 
 #### Scenario: The description is edited after the run
 - **WHEN** an author adds the exception line after the change-document job has already failed
-- **THEN** the verdict SHALL be unchanged until the check is re-run
-- **AND** the original failure message SHALL already have told them to re-run it
+- **THEN** the edit SHALL itself trigger a fresh evaluation, and the new verdict SHALL be taken
+  against the edited description
+- **AND** the failure message SHALL have told the author to edit the description rather than to
+  replay the failed run, because a replayed run is decided against the description as it stood
+  when the run was first triggered
 
 ### Requirement: The verdict is taken over the pull request's base..head diff
 Both jobs SHALL evaluate the pull request as a single unit, comparing the base of the pull
@@ -167,25 +170,38 @@ before review.
 - **THEN** the checkout SHALL use `fetch-depth: 0`, so the base and head commits of the pull
   request can be diffed directly rather than from a shallow clone that cannot reach the base
 
-### Requirement: The gate reports failure without blocking the merge
-A failing process check SHALL be visible on the pull request and SHALL NOT prevent it from
-being merged. This change SHALL NOT register either job as a required status check and SHALL
-NOT alter any branch-protection setting. Responsibility for merging over a red gate rests with
-whoever merges, and the failed run is the record of that decision.
+### Requirement: A red gate holds the merge, and a stated exception releases it
+Both jobs SHALL be required status checks on the default branch, registered under the contexts
+`OpenSpec artifacts are valid` and `A spec file, or a stated exception`, so a pull request SHALL
+NOT be mergeable while either is red. Registration SHALL accompany this change rather than be
+deferred. A check blocks only by being named in branch protection — there is no project-wide
+setting that makes every job blocking — so those two names are part of the contract, and
+renaming a job without re-registering it SHALL be treated as removing the gate.
 
-This is deliberately weaker than the exception mechanism is strong: because a pull request can
-always state an exception, a red gate means the author neither wrote a spec nor was willing to
-say why — which is worth seeing, and still not worth blocking on.
+The exception line SHALL be the sanctioned override, and obtaining it SHALL NOT require any
+review, label or maintainer action. The override is not a weakness in a blocking gate; it is
+what makes blocking proportionate. Without a required check a pull request can be merged having
+done neither thing — no spec file and no stated reason — leaving a red run that nobody is
+accountable for. With one, it can be merged only after one of the two has been done. The relief
+is a single sentence the author writes themselves, and that sentence is the record of why the
+rule was set aside.
 
-#### Scenario: Merging over a red gate
+#### Scenario: A red gate holds the merge
 - **WHEN** the change-document job has failed on a pull request
-- **THEN** the pull request SHALL remain mergeable, and the failed run SHALL remain visible on
-  it as the record of the decision
+- **THEN** the pull request SHALL NOT be mergeable until it either carries a spec file or states
+  an exception
+- **AND** the failed run SHALL remain visible on it as the record of why the merge is held
 
-#### Scenario: No branch-protection change accompanies the gate
+#### Scenario: Branch protection names both contexts
 - **WHEN** this capability is implemented
-- **THEN** no required-status-check or branch-protection setting on the repository SHALL be
-  added or modified
+- **THEN** both job names SHALL be added to the required status checks for the default branch
+- **AND** no other branch-protection setting SHALL be altered
+
+#### Scenario: The override needs nobody's approval
+- **WHEN** an author adds an `sdd-exception: <reason>` line to a pull request that carries no
+  spec file
+- **THEN** the change-document job SHALL pass and the merge SHALL no longer be held
+- **AND** no review, label or maintainer action SHALL be required to reach that state
 
 #### Scenario: A red process check is distinguishable from a red test run
 - **WHEN** a contributor looks at the checks on a pull request

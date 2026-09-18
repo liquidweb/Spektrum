@@ -48,7 +48,8 @@ ever run on a pull request — there is no operational history to reason from, o
   that tried to judge it would be wrong in both directions.
 - Judging whether a stated exception is a *good* reason. The gate requires that one exists and
   puts it in the log; a reviewer decides whether to accept it.
-- Enforcing anything through branch protection. See the decision below.
+- Widening branch protection beyond the two process contexts. This change names those two as
+  required status checks and leaves every other setting on the default branch alone.
 - Back-filling the missing specs for the unspecified library surface. The gate makes the gap
   visible on new work; closing the existing gap is separate, scheduled work.
 
@@ -119,17 +120,28 @@ with no reason is the label again in text form. *Alternative considered:* keepin
 advisory `::warning` + `exit 0`. Rejected: contributors calibrate on outcomes, and a check that
 has never once failed is indistinguishable from no check.
 
-**Red, visible, and not required.** Making the job a required status check would block merges,
-which sounds like the stronger choice and is the wrong one for this repository at this moment.
-Branch protection is repository configuration: it is not in the diff, so it cannot be reviewed,
-cannot be reverted by a revert, and is invisible to anyone reading the tree. A gate that has
-never run should not be handed the ability to stop all work on its first day, and the
-maintainer count here means a wrongly-red gate would have nobody to appeal to. What remains is
-the useful part — the check is on the pull request, the failure is legible, and merging past it
-is a deliberate act by a named person. This is also deliberately the weak half of the pair:
-because an author can always state an exception, a red gate means they neither wrote a spec nor
-were willing to say why, which is worth seeing and still not worth blocking on. Promotion to
-required is a later decision, informed by how often the gate is right; see Open Questions.
+**Red, visible, and required.** Both jobs are registered as required status checks on the
+default branch, so a red one holds the merge. There is no project-wide switch for this on
+GitHub: a check blocks only by being named in branch protection, which makes the two `name:`
+values — `OpenSpec artifacts are valid` and `A spec file, or a stated exception` — part of the
+contract rather than labels, and makes registration a step this change has to carry rather than
+a consequence of merging the workflow.
+
+The argument for leaving it unrequired was that blocking buys nothing, because any author can
+satisfy the gate by typing one sentence. That inverts what the two states actually guarantee.
+Without a required check, the merge button is available to a pull request whose author did
+*neither* thing — no spec file, no stated reason — and what is left behind is a red run that
+nobody is accountable for, on a branch that now contains unspecified work. With one, the merge
+waits until one of the two has been done, which is the whole obligation. So the exception is
+not the weakness in a blocking gate; it is the reason blocking is proportionate. Relief is one
+sentence away, it needs nobody's approval, and the sentence is itself the record of why the
+rule was set aside — which is more than an unrequired check produces on its best day.
+
+What blocking costs is real and bounded: branch protection is repository configuration, so it
+is not in the diff, cannot be undone by a revert, and is invisible to anyone reading the tree.
+The mitigations are that it is written down here and in the spec, that it names exactly two
+contexts, and that the override is self-service, so a wrongly-red gate does not need a
+maintainer to be available before work can continue.
 
 **`base..head` with `fetch-depth: 0`, using `git diff` and the event payload.** The diff is
 taken between `github.event.pull_request.base.sha` and `github.event.pull_request.head.sha`,
@@ -159,7 +171,8 @@ installs it. The caret pin takes 1.x fixes without a configuration change and re
 deliberate edit for 2.x, which matters because `--strict` semantics are exactly the kind of
 thing a major version revises. 1.12.0 is the version the specs in this repository were authored
 and validated against. *Alternative considered:* an exact pin. Rejected as needless churn for a
-non-blocking check; a 1.x regression costs a red check, not a blocked repository.
+required check whose failures are process failures; the caret keeps the CLI current, and the
+risk a 1.x regression carries is handled where it belongs, under Risks / Trade-offs.
 
 ## Risks / Trade-offs
 
@@ -189,14 +202,21 @@ non-blocking check; a 1.x regression costs a red check, not a blocked repository
   precisely because the tree is clean today: validation exits 0 across all 10 items. The
   alternative, validating only changed artifacts, lets a defect on `master` sit indefinitely.
 - **The npm registry or a 1.x CLI regression turns the gate red for reasons unrelated to the
-  pull request** → non-blocking absorbs it. On a required check this would be an outage.
+  pull request** → accepted, and now consequential rather than cosmetic: because the check is
+  required, an outage in the toolchain is an outage in the merge queue. The mitigation is the
+  version pin. `^1.12.0` is narrow enough that a 2.x release — the version that would revise
+  `--strict` semantics — cannot arrive without a deliberate edit, so the exposure is limited to
+  a bad 1.x patch, which is answered by raising the lower bound or pinning exactly for as long
+  as the bad version is current. A registry outage is answered by waiting or by re-running,
+  since neither job depends on the pull request's own state.
 - **The GitHub workflow and the GitLab template in COS-30 drift apart** → the requirements in
   `sdd-ci-gate` are the shared artifact, not either platform's configuration, and the two-
   condition rule has no per-repository data to diverge on. What legitimately differs is
   host-specific: `github.event.pull_request.body` versus the merge request's description.
 - **A contributor cannot tell which red build matters** → the two jobs are named for the
   process concern they check, and `CONTRIBUTING.md` gains a paragraph stating that Travis owns
-  tests, lint and the deploy while this workflow owns process and does not block a merge.
+  tests, lint and the deploy while this workflow owns process and holds the merge until a spec
+  file or a stated exception is present.
 - **Nothing prevents a contributor from satisfying the gate with an empty `spec.md`** → an empty
   or requirement-less `spec.md` fails `--strict` in job 1, which closes the cheapest version of
   this. A well-formed but vacuous requirement still passes both jobs, and that is out of scope
@@ -211,20 +231,30 @@ constraint and one courtesy:
    is green. The pull request that introduces the gate adds
    `openspec/changes/add-openspec-ci-gate/specs/sdd-ci-gate/spec.md`, so it satisfies its own
    change-document job under the narrowed definition, with no exception line needed.
-2. Strike tasks 5.1–5.4 from `enforce-sdd-and-audit-docs` in the same pull request or the next
+2. Register the two contexts as required status checks on the default branch once the workflow
+   has produced at least one run, because a context that has never reported cannot be selected
+   in the branch-protection UI. Registering before the first green run is the one ordering that
+   does not work.
+3. Strike tasks 5.1–5.4 from `enforce-sdd-and-audit-docs` in the same pull request or the next
    one, so the superseded plan does not get built a second time by someone working that change
-   later. Record what is superseded and what is not: the `^spektrum/` watched path, the missing
-   `--strict` and the merge-blocking framing are replaced; its escape hatch is kept, refined
-   from a label to an `sdd-exception:` line that carries a reason.
+   later. Record what is superseded and what is not: the `^spektrum/` watched path and the
+   missing `--strict` are replaced; its merge-blocking framing and its escape hatch are both
+   kept, the latter refined from a label to an `sdd-exception:` line that carries a reason.
 
-Rollback is deleting one file. Neither job writes anything, so there is no state to unwind.
+Rollback is deleting one file and removing the two contexts from the required list — the second
+half matters, because a required context that no workflow reports any more leaves every pull
+request waiting on a check that will never arrive. Neither job writes anything, so there is no
+other state to unwind.
 
 ## Open Questions
 
-- **Should the gate become a required check later, and on what evidence?** Deferrable: it
-  changes no specification and no task here, and the answer needs run data the repository does
-  not have yet. A reasonable trigger is a month of pull requests in which every red gate was
-  correct.
+- ~~**Should the gate become a required check later, and on what evidence?**~~ **Resolved: it
+  is required from the start.** The question assumed the evidence needed was the gate's
+  accuracy, but the two conditions are mechanical — a `spec.md` in the diff, or non-empty text
+  after a marker — so there is no judgment for run data to vindicate. What the deferral bought
+  was a window in which a pull request could be merged having done neither thing, which is the
+  state the gate exists to prevent. Both contexts are registered with this change; see
+  Decisions — Red, visible, and required.
 - **What exception rate is too high?** The number is the gate's main health signal, and it has
   no baseline yet. Answerable after the first month across the repositories that adopt the step:
   if nearly every pull request is waived, the rule is landing on work it was not written for; if

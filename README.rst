@@ -47,9 +47,15 @@ is covered like any other. To state an exception, add a line to the pull request
 The reason is required — a bare ``sdd-exception:`` fails — and the job echoes it into its log,
 so the justification survives in the build record.
 
-**Neither check blocks a merge.** They go red, and whoever merges over a red check takes
-responsibility. Travis owns the tests and the lint; these two own only the ``openspec/``
-artifacts. Red here is paperwork; red on Travis is code.
+**Both checks are required, so a red one holds the merge.** The exception line is the
+sanctioned override and it is not a weakness in that: it is what keeps blocking proportionate.
+Without a required check, a pull request can be merged having done neither thing — no spec file
+and no stated reason — leaving a red check nobody answers for. With one, it can be merged once
+one of the two is done, and the relief is a single sentence that needs nobody's approval and is
+itself the record of why the rule was set aside.
+
+Travis owns the tests and the lint; these two own only the ``openspec/`` artifacts. Red here is
+paperwork; red on Travis is code.
 
 Getting Started
 ~~~~~~~~~~~~~~~~
