@@ -15,6 +15,11 @@ Features and bug fixes
     sections to delete, and the single-commit rule is stated as a shared
     convention across our repositories rather than a preference local to this
     one - gh-#19
+ #. Adding a spec-driven development check to every pull request - a pull
+    request must carry a spec file under openspec/, or state a reason on an
+    sdd-exception: line in its description. A malformed spec or change fails
+    separately and cannot be waived. Both checks fail the build and neither
+    blocks a merge - gh-#20
 
 Release: 1.3.1
 --------------------------------
